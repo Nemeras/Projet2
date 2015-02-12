@@ -28,7 +28,7 @@ match pile with
 let rec update_supprimer n pil tableau liste=
 match liste with
 |[] -> ();
-|h::t -> let (boole,liste)=tableau.(h) in tableau.(h) <- (boole,(List.filter (fun i -> i!=n) liste));update_supprimer n pil tableau t;;
+|h::t -> let (boole,liste)=tableau.(h) in tableau.(h) <- (boole,(List.filter (fun i -> i!=n) liste));if tableau.(h)=(boole,[]) then tableau.(0)<-false; update_supprimer n pil tableau t else update_supprimer n pil tableau t;;
 
 let rec update_changer n pil tableau liste=
 match liste with
