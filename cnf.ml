@@ -21,7 +21,7 @@ type cnf = {
 (* Représente la réponse de l'algorithme *)
 type solution =
 	| False			(* Insatisfiable *)
-	| True of bool array	(* Satisfiable, avec un tableau représentant un instanciation correspondante
+	| True of int array	(* Satisfiable, avec un tableau représentant un instanciation correspondante
 				   (case k : valeur donnée à la variable d'indice k dans l'instanciation     *)
 
 
@@ -45,7 +45,7 @@ let trivial c =
 		match c with
 		| [] -> false
 		| x::_ when x = -y -> true   (* Si un littéral et sa négation apparaissent, c'est une tautologie *)
-		| x::q -> aux q y
+		| x::q -> aux q x
 	in
 	aux c 0
 
@@ -97,7 +97,7 @@ let print_solution sol =
 	| True t ->
 		printf "s SATISFIABLE\n" ;
 		for k = 1 to Array.length t - 1 do
-			if t.(k) then
+			if t.(k) > 0 then
 				printf "%d " k
 			else
 				printf "-%d " k
