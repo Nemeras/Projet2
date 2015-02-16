@@ -24,19 +24,6 @@ let print_empl empl =
 		print_newline() ;
 	done
 
-let init_clause c v empl i =
-	let rec aux c =
-		match c with
-		| [] -> ()
-		| x::q when x > 0 ->
-			empl.(x) <- i::(fst empl.(x)), snd empl.(x) ;
-			aux q ;
-		| x::q ->
-			empl.(-x) <- fst empl.(-x), i::(snd empl.(-x)) ;
-			aux q ;
-	in
-	aux c
-
 let cnf_to_vect cnf =
 	let v = make (cnf.c_real+1) (false,[]) in
 	let empl = make (cnf.v_real+1) ([],[]) in
@@ -44,7 +31,7 @@ let cnf_to_vect cnf =
 		match l with
 		| [] -> ()
 		| c::q ->
-			init_clause c v empl i ;
+			clause_active c v empl i ;
 			v.(i) <- false, c ;
 			aux q (i+1) ;
 	in
@@ -53,54 +40,64 @@ let cnf_to_vect cnf =
 	v, empl
 
 
-(*let continue stack v empl solution k =
-	print_int !k ; print_newline() ;
-	if not (fst v.(0)) && !k < 0 then
-		begin
-		v.(0) <- true, [] ;
-		solution.(- !k) <- 0 ;
-		k := backtrack stack v (snd empl.(- !k)) ;
-		end
-	else if not (fst v.(0)) && !k > 0 then
-		begin
-		v.(0) <- true, [] ;
-		k := backtrack stack v (fst empl.(!k)) ;
-		update (- !k) stack v (fst empl.(!k)) (snd empl.(!k)) ;
-		k := - !k ;
-		solution.(- !k) <- -1 ;
-		end
-	else if !k <> 0 then
-		begin
-		k := abs !k + 1 ;
-		update !k stack v (snd empl.(!k)) (fst empl.(!k)) ;
-		solution.(!k) <- 1 ;
-		end
-*)
+let uni empl solution =
+	for i = 1 to length empl - 1 do
+		if solution.(i) = 0 && fst empl.(i) = [] && snd empl.(i) <> [] then
+			empl.(0) <- [],-i::(snd empl.(0))
+		else if solution.(i) = 0 && snd empl.(i) = [] && fst empl.(i) <> [] then
+			empl.(0) <- [],i::(snd empl.(0))
+	done
 
 let continue stack v empl solution k back =
 	if not (fst v.(0)) && not !back then
 		back := true
 	else if !back then
-		if !k > 0 then
+		if !k > 0 && solution.(!k) == 1 then
 			begin
 			v.(0) <- true, [] ;
 			back := false ;
-			backtrack stack v (snd empl.(!k)) ;
+			backtrack stack v empl (snd empl.(!k)) ;
 			k := - !k ;
-			update !k stack v (fst empl.(- !k)) (snd empl.(- !k)) ;
+			update !k stack v empl (fst empl.(- !k)) (snd empl.(- !k)) ;
 			solution.(- !k) <- -1 ;
+			end
+		else if !k > 0 then
+			begin
+			backtrack stack v empl (snd empl.(!k)) ;
+			k := pick stack
 			end
 		else
 			begin
-			backtrack stack v (fst empl.(- !k)) ;
+			backtrack stack v empl (fst empl.(- !k)) ;
 			k := pick stack
 			end
 	else
 		begin
+		uni empl solution ;
+		empl.(0) <- [],[] ;
 		k := abs !k + 1 ;
-		update !k stack v (snd empl.(!k)) (fst empl.(!k)) ;
-		solution.(!k) <- 1 ;
+		if abs solution.(!k) <= 1 then
+			begin
+			update !k stack v empl (snd empl.(!k)) (fst empl.(!k)) ;
+			solution.(!k) <- 1 ;
+			end
 		end
+
+
+let rec propa stack v empl solution l =
+	match l with
+	| [] -> ()
+	| x::q when x > 0 ->
+		solution.(x) <- 2 ;
+		update x stack v empl (snd empl.(x)) (fst empl.(x)) ;
+		propa stack v empl solution q
+	| x::q ->
+		solution.(-x) <- -2 ;
+		update x stack v empl (fst empl.(-x)) (snd empl.(-x)) ;
+		propa stack v empl solution q
+	(*|x::q when (x > 0 && solution.(x) < 0) || (x < 0 && solution.(-x) > 0) ->
+		v.(0) <- false,[]
+	| _ -> ()*)
 
 
 let solve cnf =
@@ -108,11 +105,14 @@ let solve cnf =
 	let v, empl = cnf_to_vect cnf in
 	let solution = make (cnf.v_real+1) 0 in
 	let stack = create_stack() in
-	update 1 stack v (snd empl.(1)) (fst empl.(1)) ;
+	update 1 stack v empl (snd empl.(1)) (fst empl.(1)) ;
 	solution.(1) <- 1 ;
 	let k = ref 1 in
 	let back = ref false in
 	while abs !k <= cnf.v_real && !k <> 0 do
+		(*print_int !k ; print_string "\n\ntab :\n" ;
+		print_tab v ; print_string "\n\nempl :\n\n" ;
+		print_empl empl ;*)
 		if !k <> 0 then
 			if abs !k = cnf.v_real then
 				if not (fst v.(0)) then
