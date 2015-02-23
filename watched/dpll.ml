@@ -14,7 +14,7 @@ let rec delete_uni clauses solution =
 	| [x]::tail ->
 		solution.(x) <- 2*x ;
 		delete_uni tail solution
-	| c::tail -> c::(delete_uni tail)
+	| c::tail -> c::(delete_uni tail solution)
 
 let cnf_to_vect clauses nbr_clauses =
 	let v = make nbr_clauses [] in

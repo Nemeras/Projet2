@@ -15,14 +15,14 @@ let update element pile tableau solution=
 	let liste_changement = ref [] in
 	pile:=element::!pile;
 	for i = 0 to ((Array.length tableau)-1) do
-	if !(is_w_true tableau.(i) solution) then
+	if not (is_w_true tableau.(i) solution) then
 		begin
 		tableau.(i) <- change_clause (tableau.(i)) solution;
 		if is_random_then_false (tableau.(i)) solution then liste_changement:=(hd (tableau.(i)))::(!liste_changement);
 		is_clause_false tableau.(i) solution;
 		end;
 	done;
-liste_changement;;
+!liste_changement;;
 
 
 let backtrack pile =
