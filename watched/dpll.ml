@@ -4,7 +4,6 @@ open Array
 open Pile
 open Watched
 
-
 let rec delete_uni clauses solution =
 	match clauses with
 	| [] -> []
@@ -35,19 +34,16 @@ let cnf_to_vect clauses nbr_clauses =
 let rec propa uni stack v solution =
 	match uni with
 	| [] -> ()
-	| x::q when x > 0 ->
-		solution.(x) <- 2 ;
+	| x::q when solution.(abs x)*x >= 0 ->
+		solution.(abs x) <- 2*x ;
 		let l = update x stack v solution in
 		propa (l@q) stack v solution
-	| x::q ->
-		solution.(-x) <- -2 ;
-		let l = update x stack v solution in
-		propa (l@q) stack v solution
+	| _ -> solution.(0) <- -2
 
 let continue stack v solution uni k back =
 	if solution.(0) < 0 && not !back then
 		begin
-		uni := [] ;
+		k := pick stack ;
 		back := true
 		end
 	else if !back then
@@ -60,20 +56,14 @@ let continue stack v solution uni k back =
 			solution.(- !k) <- -1 ;
 			uni := update !k stack v solution ;
 			end
-		else if !k > 0 then
-			begin
-			backtrack stack ;
-			k := pick stack
-			end
 		else
 			begin
+			solution.(abs !k) <- 0 ;
 			backtrack stack ;
 			k := pick stack
 			end
 	else
 		begin
-		propa !uni stack v solution ;
-		uni := [] ;
 		k := abs !k + 1 ;
 		if abs solution.(!k) <= 1 then
 			begin
@@ -94,7 +84,7 @@ let solve cnf =
 		let v = cnf_to_vect clauses (List.length clauses) in
 		let stack = create_stack () in
 		let k = ref 1 in
-		while solution.(!k) < 0 do
+		while solution.(!k) <> 0 do
 			incr k
 		done ;
 		if !k <= cnf.v_real then
@@ -105,7 +95,10 @@ let solve cnf =
 		;
 		let back = ref false in
 		let uni = ref [] in
+		let compt = ref 0 in
 		while abs !k <= cnf.v_real && !k <> 0 do
+			propa !uni stack v solution ;
+			uni := [] ;
 			if abs !k = cnf.v_real then
 				if solution.(0) < 0 then
 					continue stack v solution uni k back
