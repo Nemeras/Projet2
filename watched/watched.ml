@@ -23,6 +23,12 @@ match liste with
 |h::h2::_ -> false
 |_ -> failwith "probleme dans cannot find";;
 
+let is_clause_false liste solution =
+match liste with
+|h::h2::_ when (is_false h2 solution) && (is_false h solution) -> solution.(0) <- -2;
+|h::h2:_ -> ();
+|_ -> failwith "probleme dans is_clause_false";;
+
 let change_clause liste solution =
 match liste with
 |h::h2::_ when (is_false h solution) && (is_false h2 solution) -> aufond (h::(aufond (tl liste) solution)) solution
