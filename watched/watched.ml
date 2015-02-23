@@ -37,4 +37,8 @@ match liste with
 |h::h2::_ -> liste
 |_->failwith "probleme dans change_clause";;
 
-
+let is_random_then_false liste solution =
+match liste with
+|h::h2::_ when (!(is_false h solution))&&(is_false h2 solution) -> true
+|h::h2::_ -> false
+|_->failwith "probleme dans is_random_then_false";;
