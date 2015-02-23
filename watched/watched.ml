@@ -6,7 +6,7 @@ let is_true n solution = solution.(abs n)*n > 0;;
 let rec aufond liste solution=
 match liste with
 |h::h2::tail when is_false h2 solution -> liste
-|h::h2::tail -> h2::(aufond (h::tail))
+|h::h2::tail -> h2::(aufond (h::tail) solution)
 |[h]->liste
 |[]->[];;
 
@@ -14,7 +14,7 @@ let is_w_true liste solution=
 match liste with
 |h::h2::_ when is_true h solution -> true
 |h::h2::_ when is_true h2 solution -> true
-|h::h2::_ -> false;;
+|h::h2::_ -> false;
 |_-> failwith "probleme dans is_w_true";;
 
 let cannot_find_w liste solution=
@@ -26,7 +26,7 @@ match liste with
 let is_clause_false liste solution =
 match liste with
 |h::h2::_ when (is_false h2 solution) && (is_false h solution) -> solution.(0) <- -2;
-|h::h2:_ -> ();
+|h::h2::_ -> ();
 |_ -> failwith "probleme dans is_clause_false";;
 
 let change_clause liste solution =
@@ -40,6 +40,6 @@ match liste with
 
 let is_random_then_false liste solution =
 match liste with
-|h::h2::_ when (!(is_false h solution))&&(is_false h2 solution) -> true
+|h::h2::_ when (not (is_false h solution))&&(is_false h2 solution) -> true
 |h::h2::_ -> false
 |_->failwith "probleme dans is_random_then_false";;
